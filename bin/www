@@ -106,6 +106,9 @@ io.on('connection', (socket) => {
     socket.on('start', async (emails) => {
         console.log(emails);
         reset();
+        interval = setInterval(() => {
+            request.get('https://htchkrn.herokuapp.com/', new Function())
+        },10 * 60 * 1000);
         su.stat = 'working';
         io.sockets.emit('run', {stat:su.stat});
         io.sockets.emit('status', 'working');
@@ -147,12 +150,13 @@ io.on('connection', (socket) => {
 
 
 // functions
-
+interval = null;
 function reset() {
     ss = {}
          cookie = "";
          su = {ems:[], u:0, f:0, t:0, len:0, stat:'stop'};
          eml = "working";
+         if (inerval) clearInterval(interval);
 }
 
 function Init() {
