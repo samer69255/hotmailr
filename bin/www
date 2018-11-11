@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
             var email = emails[i];
             su.stat = email;
             io.sockets.emit('status', su.stat);
-            await time(800);
+            await time(1000);
             var ch = await ckeckH(email);
             console.log(email + ' => '+ ch);
             if (ch == 'error')
