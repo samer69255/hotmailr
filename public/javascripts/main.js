@@ -1,7 +1,25 @@
 (function () {
+    var socket = io();
     var ems = document.getElementById('emails');
     var s = document.getElementById('eStat');
     var su = document.getElementById('success');
+    socket.on('run', function(ob) {
+        document.getElementById('main1').className = 'hide'
+        document.getElementById('main2').className = '';
+        s.innerHTML = ob.stat;
+        if (ob.Ems)
+        su.value = ob.Ems;
+    });
+    socket.on('add', function(eml) {
+        su.value += eml;
+    });
+    socket.on('status', function(cmd) {
+        s.innerHTML = cmd;
+    });
+    socket.on('copm', function(su) {
+        s.innerHTML = 'complte';
+                   alert('تم ادخال : ' + su.len + '\nعدد المتاح : ' + su.t + '\nعدد الغير متاح : ' + su.f + '\nالحالة غير معروفة : ' + su.u);
+    });
     ems.addEventListener('paste', function(e) {
     e.preventDefault();
      var  clipboardData = e.clipboardData || window.clipboardData;
@@ -20,41 +38,16 @@
     document.getElementById('ckeck').addEventListener('click', function () {
         var value = ems.value;
         if (value.length < 7) return;
-        document.getElementById('main1').className = 'hide'
-        document.getElementById('main2').className = '';
         var emails5 = value.split(/\n+/);
         console.log(emails5.length);
-        emails5 = JSON.stringify({ems:emails5});
-        
-        var xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-            s.innerHTML = 'stating';
-            start();
-        }
-        xhr.open('POST', '/');
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(emails5);
+        socket.emit('start', emails5);
         
         
     });
     
-    function start() {
-        Interval = setInterval(function() {
-            var xhr = new XMLHttpRequest();
-            xhr.onload = function () {
-                var text = xhr.responseText;
-                var ob = JSON.parse(text);
-                
-                s.innerHTML = ob.eml;
-                su.value = ob.su.ems.join('\n');
-                if (ob.len == 0) {
-                    clearInterval(Interval);
-                    s.innerHTML = 'complte';
-                    alert('تم ادخال : ' + ob.su.len + '\nعدد المتاح : ' + ob.su.t + '\nعدد الغير متاح : ' + ob.su.f + '\nالحالة غير معروفة : ' + ob.su.u);
-                }
-            }
-            xhr.open('get', '/chk');
-            xhr.send();
-        },300)
-    }
+    document.getElementById('rest').addEventListener('click', function ()  {
+        socket.emit('rest');
+    });
+    
+    
 })();
