@@ -93,7 +93,7 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
-
+var interval = null;
 var io = require('socket.io')(server);
 reset();
 
@@ -150,13 +150,12 @@ io.on('connection', (socket) => {
 
 
 // functions
-interval = null;
 function reset() {
     ss = {}
          cookie = "";
          su = {ems:[], u:0, f:0, t:0, len:0, stat:'stop'};
          eml = "working";
-         if (inerval) clearInterval(interval);
+         if (interval = null) clearInterval(interval = null);
 }
 
 function Init() {
