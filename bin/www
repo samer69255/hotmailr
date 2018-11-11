@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
             var email = emails[i];
             su.stat = email;
             io.sockets.emit('status', su.stat);
-            await time(500);
+            await time(800);
             var ch = await ckeckH(email);
             console.log(email + ' => '+ ch);
             if (ch == 'error')
@@ -216,7 +216,7 @@ async function ckeckH(email) {
             
             return resolve('int');
         }
-        if (response.statusCode != '200') return resovle('error');
+        if (response.statusCode != '200') return resolve('error');
         if (body.apiCanary)
      ss.canary = body.apiCanary;
       resolve(body.isAvailable);
