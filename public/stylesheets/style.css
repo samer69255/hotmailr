@@ -8,7 +8,7 @@ a {
   color: #00B7FF;
 }
 
-#emails {
+textarea {
    margin: 10px 0px;
     height: 241px;
     width: 1090px;
