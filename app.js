@@ -18,12 +18,22 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+app.use('/', function(req, res, next) {
+    if (req.cookies.user == undefined)
+        {
+            var user = getId();
+            res.cookie('user', user, {maxAge: 60 * 60 * 24 * 30 * 10 * 12 * 1000});
+        }
+   next();
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 //app.use('/', indexRouter);
 //app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
+
 app.use(function(req, res, next) {
   next(createError(404));
 });
@@ -74,6 +84,16 @@ async function checkF(email) {
     });
     });
 
+}
+
+function getId() {
+  var text = "";
+  var possible = "_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  for (var i = 0; i < 18; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
 }
 
 
