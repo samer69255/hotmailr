@@ -11,7 +11,7 @@
         su.value = ob.Ems;
     });
     socket.on('add', function(eml) {
-        su.value += eml;
+        su.value += eml + "\n";
     });
     socket.on('status', function(cmd) {
         s.innerHTML = cmd;
