@@ -30,7 +30,7 @@
     var emails2 = [];
     for (var i in emails) {
         var key = emails[i];
-                if (key.indexOf('@hotmail') > -1 || key.indexOf('@outlook') > -1 || key.indexOf('@live') > -1 )  emails2.push(key);
+                if ( (/@(hotmail|outlook|yahoo)/).test(key) )  emails2.push(key);
     }
     this.value = emails2.join('\n').trim();
     });
