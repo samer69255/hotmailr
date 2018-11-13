@@ -94,47 +94,54 @@ function onListening() {
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
-var Val = {};
 var interval = null;
 var io = require('socket.io')(server);
-
+var runner = '';
+reset();
 io.on('connection', (socket) => {
     console.log('connected');
     var cookies = Cookie.parse(socket.handshake.headers.cookie);
     var user = cookies.user;
-    console.log(user);
-    if (! Val[user]) reset(user);
-    if (Val[user].stat != 'stop') {
-        if (Val[user].stat == 'compile') var emails = fs.readFileSync('./users/'+Val[user].name+'.txt', 'UTF-8').split('\n'); else var emails = Val[user].ems;
-        io.sockets.emit('run', {Ems:emails, stat:Val[user].stat}); 
+    
+    if (stat != 'stop' && runner == user) {
+        if (stat == 'compile') var emails = fs.readFileSync('./users/'+name+'.txt', 'UTF-8').split('\n'); else var emails = ems;
+        socket.emit('run', {Ems:emails, stat:stat}); 
     }
+    if (runner !== '' && runner !== user) soket.emit('block');
     socket.on('rest', () => {
-        reset(user);
+        reset();
     })
     socket.on('start', async (emails) => {
         console.log(emails);
-        reset(user);
+        reset();
+        runner = user;
 //        interval = setInterval(() => {
 //            request.get('https://htchkrn.herokuapp.com/', new Function())
 //        },10 * 60 * 1000);
-        Val[user].stat = 'working';
-        socket.emit('run', {stat:Val[user].stat});
+        stat = 'working';
+        socket.emit('run', {stat:stat});
         socket.emit('status', 'working');
-        Val[user].su.len = emails.length;
-        await Init(user);
+        su.len = emails.length;
+        status(socket,'تهيئة هوتميل');
+        await InitH();
+        status(socket,'تهيئة ياهو');
+        await InitY();
         for (var i in emails) {
             var email = emails[i];
-            Val[user].stat = email;
-            socket.emit('status', Val[user].stat);
+            status(socket,email);
+            var host = email.match(/@([a-zA-Z]+)\./)[1];
+            console.log(host);
             if (i > 0)
             await time(1000);
-            var ch = await ckeckH(email, user);
+            if (host == 'hotmail')
+            var ch = await ckeckH(email);
+            else var ch = await checkY(email);
             console.log(email + ' => '+ ch);
             if (ch == 'error')
             {
                 await(2000);
                 try {
-                    await Init(user);
+                    await Init();
                 } catch (e) {
                     throw e;
             }
@@ -143,48 +150,50 @@ io.on('connection', (socket) => {
             }
             
             if (ch == true) {
-                Val[user].ems.push(email);
-                Val[user].su.t++;
+                ems.push(email);
+                su.t++;
                 socket.emit('add', email);
         }
-         else if (ch == false) {  Val[user].su.f++; }
-         else Val[user].su.u++;
+         else if (ch == false) {  su.f++; }
+         else su.u++;
         }
-        Val[user].stat = 'compile';
+        stat = 'compile';
         
-            var name = 'user_'+(new Date).getTime().toFixed(0);
-            fs.writeFile('./users/'+name+'.txt', Val[user].ems.join('\n'), function (e) {
-                Val[user].ems = [];
+             name = 'user_'+(new Date).getTime().toFixed(0);
+            fs.writeFile('./users/'+name+'.txt', ems.join('\n'), function (e) {
+                ems = [];
                 if (e) throw e;
             });
-            Val[user].name = name;
+            name = name;
         
-        socket.emit('copm', {t:Val[user].su.t, f:Val[user].su.f, u:Val[user].su.u, len:Val[user].su.len});
+        socket.emit('copm', {t:su.t, f:su.f, u:su.u, len:su.len});
     });
     
 });
 
 
-
+//(async function () {
+//    await InitY();
+//    console.log(await checkY('samer04054959@yahoo.com'));
+//})();
 // functions
-function reset(user) {
-       Val[user] = {
-           cookie:"",
-           ss: {},
-           su: {ems:[], u:0, f:0, t:0, len:0, stat:'stop'},
-           stat: "stop",
-           ems: []
-           
-       }
-    console.log(Val[user]);
+function reset() {
+      
+         cookie={hotmail:"", yahoo:""};
+           ss= {};
+           yy = {};
+           su= {ems:[], u:0, f:0, t:0, len:0, stat:'stop'};
+           stat= "stop";
+           ems= [];
+           runner = '';
          if (interval != null) clearInterval(interval);
 }
 
-function Init(user) {
+function InitH() {
     return new Promise(resolve => {
         
         
-        request.get('https://signup.live.com/?lic=1', (err, respone, body) => {
+        request.get('https://signup.live.com/?lic=1', (err, response, body) => {
             if (err) {
                 console.log('initing ...');
                 return Init();  };
@@ -195,7 +204,7 @@ function Init(user) {
         hpgid = body.match(/"hpgid":(\d+)/)[1],
         canary = (body.match(/"apiCanary":"(.*?)"/)[1]);
     
-    Val[user].ss = {
+    ss = {
         uaid:uaid,
         uiflvr:uiflvr,
         scid:scid,
@@ -203,12 +212,12 @@ function Init(user) {
         canary:unescapeJs(canary)
     }
     
-    var Cookies = respone.headers['set-cookie'];
+    var Cookies = response.headers['set-cookie'];
     Cookies.forEach(key => {
         var cc = key.split(' ')[0];
-        Val[user].cookie += " " + cc;
+        cookie.hotmail += " " + cc;
     });
-     Val[user].cookie =  Val[user].cookie.trim();
+     cookie.hotmail =  cookie.hotmail.trim();
     //console.log(cookie);
     resolve();
         });
@@ -218,18 +227,18 @@ function Init(user) {
 
 }
 
-async function ckeckH(email, user) {
+function ckeckH(email) {
     
     return new Promise(resolve => {
-          var data = {signInName: email,uaid: Val[user].ss.uaid,includeSuggestions:true,uiflvr: Val[user].ss.uiflvr,scid: Val[user].ss.scid,hpgid: Val[user].ss.hpgid}
+          var data = {signInName: email,uaid: ss.uaid,includeSuggestions:true,uiflvr: ss.uiflvr,scid: ss.scid,hpgid: ss.hpgid}
    // console.log(data);
     var options = {
     url:'https://signup.live.com/API/CheckAvailableSigninNames?lic=1',
     json:(data),
     headers:{
         'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',
-        'Cookie': Val[user].cookie,
-        'canary': Val[user].ss.canary
+        'Cookie': cookie.hotmail,
+        'canary': ss.canary
 }
 }
     
@@ -240,7 +249,7 @@ async function ckeckH(email, user) {
         }
         if (response.statusCode != '200') return resolve('error');
         if (body.apiCanary)
-      Val[user].ss.canary = body.apiCanary;
+      ss.canary = body.apiCanary;
       resolve(body.isAvailable);
       //console.log(body);
     });
@@ -249,11 +258,107 @@ async function ckeckH(email, user) {
   
 }
 
+function InitY() {
+    return new Promise(resolve => {
+        request.get('https://login.yahoo.com/account/create', (err, response, body) => {
+            var crumb = body.match(/<input type="hidden" value="(.*?)" name="crumb">/)[1];
+            var acrumb = body.match(/<input type="hidden" value="(.*?)" name="acrumb">/)[1];
+            yy.crumb = crumb;
+            yy.acrumb = acrumb;
+            
+            var Cookies = response.headers['set-cookie'];
+    Cookies.forEach(key => {
+        var cc = key.split(' ')[0];
+        cookie.yahoo += " " + cc;
+    });
+     cookie.yahoo =  cookie.yahoo.trim();
+           // console.log(cookie.yahoo);
+            resolve();
+        });
+    });
+}
+
+function checkY(email) {
+    
+    return new Promise(resolve => {
+         var data = {
+        specId:'yidReg',
+        cacheStored:true,
+        crumb:yy.crumb,
+        acrumb:yy.acrumb,
+        sessionIndex:'',
+        done:'https://www.yahoo.com',
+        googleIdToken:'',
+        authCode:'',
+        tos0:'oath_freereg|xa|en-JO',
+        firstName:'',
+        lastName:'',
+        yid:email.split('@')[0],
+        password:'',
+        shortCountryCode:'AF',
+        phone:'',
+        mm:'',
+        dd:'',
+        yyyy:'',
+        freeformGender:''
+    }
+    data = dataText(data);
+    var options = {
+    url:'https://login.yahoo.com/account/module/create?validateField=yid',
+    body:(data),
+    headers:{
+        'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8',
+        'Cookie': cookie.yahoo,
+        'Accept-Encoding':'gzip, deflate, br',
+        'Connection':'keep-alive',
+        'Cache-Control':'no-cache',
+        'Accept-Language':'ar-IQ',
+        'Accept':'*/*',
+        'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.140 Safari/537.36 Edge/18.17763',
+        'Origin':'https://login.yahoo.com',
+        'Referer':'https://login.yahoo.com/',
+        'X-Requested-With': 'XMLHttpRequest',
+}
+}
+    request.post(options, (err, response, body) => {
+        if (err) throw err;
+        body = JSON.parse(body);
+       console.log(body.errors);
+        var isAvis = true;
+        if (body.errors) {
+            for (var o in body.errors) {
+                var ob = body.errors[o];
+                if (ob.name == 'yid') { isAvis = false; break;   }
+            }
+            resolve(isAvis);
+        }
+        else resolve(undefined);
+        
+        
+    });
+    });
+   
+}
+
 async function time(dd) {
     return new Promise(resolve => {
         setTimeout(() => {
             resolve();
         },dd);
     });
+}
+
+function dataText(data) {
+    var txt = "";
+    for (var i in data) {
+        if (i != Object.keys(data)[0]) txt += "&"
+        txt += i + "=" + data[i];
+    }
+    
+    return txt;
+}
+
+function status(socket,text) {
+     socket.emit('status', stat = text);
 }
 

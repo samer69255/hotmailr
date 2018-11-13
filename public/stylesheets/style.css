@@ -11,7 +11,7 @@ a {
 textarea {
    margin: 10px 0px;
     height: 241px;
-    width: 30%;
+    width: 50%;
     font-size: 14px;
     box-shadow: inset 0 1px 2px rgba(27,31,35,.075);
     border: 1px solid #d1d5da;
@@ -27,6 +27,7 @@ textarea {
     display: none;
 }
 
+/*
 button {
        background-color: #008000;
     outline: none;
@@ -37,6 +38,7 @@ button {
     height: 50px;
     width: 70px;
 }
+*/
 
 #ckeck :active, #ckeck :focus {
     border:0.5em solid #00c; /* here configure as your needs */
