@@ -8,7 +8,7 @@
         document.getElementById('main2').className = '';
         s.innerHTML = ob.stat;
         if (ob.Ems)
-        su.value = ob.Ems;
+        su.value = ob.Ems.join("\n");
     });
     socket.on('add', function(eml) {
         su.value += eml + "\n";
