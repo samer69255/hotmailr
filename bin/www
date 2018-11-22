@@ -128,7 +128,7 @@ io.on('connection', (socket) => {
         await InitY();
         for (var i in emails) {
             var email = emails[i];
-            status(socket,email);
+            status(io.sockets,email);
             var host = email.match(/@([a-zA-Z]+)\./)[1];
             console.log(host);
             if (i > 0)
@@ -152,7 +152,7 @@ io.on('connection', (socket) => {
             if (ch == true) {
                 ems.push(email);
                 su.t++;
-                socket.emit('add', email);
+                io.sockets.emit('add', email);
         }
          else if (ch == false) {  su.f++; }
          else su.u++;
@@ -166,7 +166,7 @@ io.on('connection', (socket) => {
             });
             name = name;
         
-        socket.emit('copm', {t:su.t, f:su.f, u:su.u, len:su.len});
+        io.sockets.emit('copm', {t:su.t, f:su.f, u:su.u, len:su.len});
     });
     
 });
